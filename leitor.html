@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#1D2A17">
+<title>GSL · Leitor</title>
+<style>
+:root{--ok:#188803;--bad:#B3261E;--warn:#B06000;--ink:#1D2A17;--muted:#55614F;--verde:#78BE20;--verde-esc:#2F7A12;--amarelo:#FFE14D}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0b1208;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}
+#app{display:flex;flex-direction:column;height:100%}
+.top{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--verde-esc)}
+.top .ic{width:34px;height:34px;flex:none;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.35)}.top .ic svg{width:100%;height:100%;display:block}
+.top .tt{flex:1;min-width:0}.top b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top small{color:#DDEBCF;font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top button{min-height:40px;border:0;border-radius:10px;padding:0 11px;font-weight:700;font-size:14px;background:#fff;color:var(--verde-esc)}
+.prog{font-family:ui-monospace,monospace;font-weight:800;font-size:15px;color:#fff;background:rgba(0,0,0,.2);border-radius:8px;padding:4px 7px;white-space:nowrap}
+.vid{position:relative;flex:1;min-height:150px;overflow:hidden;background:#000}
+video{width:100%;height:100%;object-fit:cover}
+.alvo{position:absolute;left:8%;right:8%;top:32%;height:30%;border:3px solid var(--verde);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.35);transition:background .15s}
+.alvo.hit{background:rgba(120,190,32,.35);border-color:#fff}
+.alvo.pausa{border-color:var(--amarelo);border-style:dashed}
+.msg{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(0,0,0,.75);border-radius:10px;padding:12px;font-size:15px;line-height:1.4}
+.mor{position:absolute;left:10px;top:10px;right:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mor span{background:var(--amarelo);color:var(--ink);font-family:ui-monospace,monospace;font-weight:800;font-size:16px;border-radius:8px;padding:5px 9px}
+.mor em{font-style:normal;background:rgba(0,0,0,.6);border-radius:8px;padding:5px 9px;font-weight:700;font-size:14px}
+.fb{background:#fff;color:var(--ink);padding:10px 14px;min-height:70px;border-top:8px solid #ccc}
+.fb.ok{border-top-color:var(--ok)}.fb.bad{border-top-color:var(--bad)}.fb.warn{border-top-color:var(--warn)}
+.fb .t{font-weight:800;font-size:16px;line-height:1.3}.fb .s{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+.acoes{background:#fff;color:var(--ink);padding:0 12px 12px;display:grid;gap:8px}
+.acoes:empty{display:none}
+.acoes h3{margin:4px 0 0;font-size:14px}
+.acoes .g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acoes .g3{grid-template-columns:1fr 1fr 1fr}
+.acoes button{min-height:52px;border-radius:12px;border:2px solid #d5dccf;background:#fff;font-weight:800;font-size:16px;color:var(--ink)}
+.acoes button.prim{background:var(--verde-esc);border-color:var(--verde-esc);color:#fff}
+.acoes button.amb{background:#F2A900;border-color:#F2A900;color:var(--ink)}
+.acoes button.sec{min-height:42px;font-size:14px;font-weight:700}
+.acoes button.perigo{min-height:42px;font-size:14px;font-weight:700;color:var(--bad);border-color:#efc6c3}
+.acoes button:disabled{opacity:.4}
+.acoes .txt{font-size:14px;color:var(--muted);line-height:1.35}
+</style></head>
+<body><div id="app">
+  <div class="top"><span class="ic" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g transform="translate(0,0) scale(1.0)"><rect width="512" height="512" rx="116" fill="#2F7A12"/><rect x="96" y="92" width="30" height="332" rx="6" fill="#fff"/><rect x="386" y="92" width="30" height="332" rx="6" fill="#fff"/><rect x="96" y="178" width="320" height="22" rx="5" fill="#78BE20"/><rect x="96" y="300" width="320" height="22" rx="5" fill="#78BE20"/><rect x="96" y="410" width="320" height="22" rx="5" fill="#78BE20"/><rect x="170" y="214" width="78" height="62" rx="6" fill="#FFE14D"/><rect x="256" y="214" width="86" height="62" rx="6" fill="#FFE14D"/><rect x="164" y="278" width="184" height="10" rx="3" fill="#1D2A17"/><rect x="172" y="288" width="22" height="12" fill="#1D2A17"/><rect x="245" y="288" width="22" height="12" fill="#1D2A17"/><rect x="318" y="288" width="22" height="12" fill="#1D2A17"/><path d="M148 236 V200 H184" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M364 236 V200 H328" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M148 262 V296 H184" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M364 262 V296 H328" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M222 138 l24 22 l46 -50" fill="none" stroke="#FFE14D" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><path d="M170 366 H342" stroke="#fff" stroke-opacity=".55" stroke-width="8" stroke-dasharray="14 14" stroke-linecap="round"/></g></svg></span><div class="tt"><b id="titulo">GSL · Leitor</b><small id="sub">A ligar ao GSL…</small></div><span class="prog" id="prog" hidden></span>
+    <button id="luz" hidden>💡</button><button id="voltar">Voltar ao GSL</button></div>
+  <div class="vid"><video id="v" playsinline muted autoplay></video><div class="alvo" id="alvo"></div><div class="mor" id="mor"></div><div class="msg" id="msg">A ligar a câmara…</div></div>
+  <div class="fb" id="fb"><div class="t">Aponte para a etiqueta da morada</div><div class="s">Mantenha o código dentro do retângulo verde. Lê sozinho, como no PDA.</div></div>
+  <div class="acoes" id="acoes"></div>
+</div>
+<script>
+/* Leitor de códigos do GSL (igual ao do PalKo): abre a câmara ao vivo (aqui é permitido, por estar fora do Google)
+   e envia cada código ao separador do GSL que o abriu. O GSL trata a leitura e responde com o resultado e as ações. */
+const FMT=['code_128','code_39','ean_13','itf','data_matrix','qr_code'];
+const $=s=>document.querySelector(s);
+const op=window.opener;
+let det=null,last={c:'',t:0,seen:0},seq=0,pend={},est=null;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let AC=null;function bip(k){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);
+  o.frequency.value=k==='ok'?1200:k==='bad'?240:600;g.gain.value=.15;o.start();o.stop(AC.currentTime+(k==='bad'?.35:.12));}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate(k==='bad'?[120,60,120]:k==='warn'?80:30);}catch(e){}}
+function mostrar(r,c){
+  const fb=$('#fb');fb.className='fb '+(r.k||'');
+  fb.innerHTML=`<div class="t">${esc(r.t||'')}</div>${r.s||c?`<div class="s">${esc(r.s||'')}${c?`${r.s?' · ':''}<span style="font-family:monospace">${esc(c)}</span>`:''}</div>`:''}`;
+}
+/* pausa a leitura enquanto o GSL espera uma escolha (loja da palete ou aviso) */
+function emPausa(){return !!(est&&(est.pendente||est.modal||est.semAuditoria||est.encerrada));}
+function acao(a,extra){enviar('acao','',Object.assign({a},extra||{}));}
+function pintar(r){
+  est=r;
+  if(r.titulo)$('#titulo').textContent=r.titulo;
+  $('#sub').textContent=r.semAuditoria?'Abra uma auditoria no GSL':(r.sub||'');
+  const p=$('#prog');if(r.feitas!=null){p.hidden=false;p.textContent=r.feitas+' mor.';}else p.hidden=true;
+  $('#mor').innerHTML=r.morada?`<span>${esc(r.morada)}</span><em>${r.paletes} ${r.paletes===1?'palete':'paletes'}</em>`:'';
+  $('#alvo').classList.toggle('pausa',emPausa());
+  const ac=$('#acoes');let h='';
+  if(r.modal){
+    h=`<h3>${esc(r.modal.titulo)}</h3><div class="txt">${esc(r.modal.texto)}</div><div class="g">`+
+      r.modal.botoes.map((b,i)=>`<button class="${i===0?'prim':''}" data-m="${i}">${esc(b)}</button>`).join('')+'</div>';
+  }else if(r.pendente){
+    h=`<h3>Loja da palete ${esc(r.pendente.sscc)}</h3><div class="txt">${r.pendente.sugerida?'Segundo o sistema: <b>'+esc(r.pendente.sugerida)+'</b>. Confirme na etiqueta.':'Palete sem loja no sistema. Escolha a loja da etiqueta.'}</div><div class="g g3">`+
+      r.pendente.lojas.map(l=>`<button class="${l===r.pendente.sugerida?'prim':''}" data-l="${esc(l)}">${esc(l)}</button>`).join('')+
+      `</div><button class="perigo" data-a="anular">Não registar esta palete</button>`;
+  }else if(r.morada){
+    h=`<div class="g"><button class="amb" data-a="vazia" ${r.podeVazia?'':'disabled'}>VAZIA</button><button class="prim" data-a="concluir" ${r.podeConcluir?'':'disabled'}>CONCLUIR</button></div>`+
+      `<div class="g"><button class="sec" data-a="anular" ${r.podeAnular?'':'disabled'}>Anular última palete</button><button class="perigo" data-a="cancelar">Cancelar morada</button></div>`;
+  }
+  ac.innerHTML=h;
+  ac.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>acao('modal',{i:+b.dataset.m}));
+  ac.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>acao('loja',{loja:b.dataset.l}));
+  ac.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{if(b.dataset.a==='cancelar'&&!confirm('Cancelar a morada '+r.morada+'? As paletes lidas nesta morada não são guardadas.'))return;acao(b.dataset.a);});
+}
+window.addEventListener('message',ev=>{const d=ev.data||{};if(d.gsl!=='resposta')return;
+  const p=pend[d.id];delete pend[d.id];
+  if(d.ignorado){if(p)mostrar({k:'',t:d.t,s:'Leia a etiqueta da morada ou o SSCC da palete.'});return;}
+  pintar(d);
+  if(d.semAuditoria){mostrar({k:'warn',t:'Abra uma auditoria no GSL',s:'Escolha a auditoria no GSL e toque outra vez em 📷.'});return;}
+  if(d.novo){mostrar(d,p&&p.c);bip(d.k||'ok');}
+  else if(p&&!p.c&&!d.modal&&!d.pendente)mostrar({k:'',t:d.morada?'Leia a próxima palete ou carregue CONCLUIR':'Aponte para a etiqueta da morada',s:'Mantenha o código dentro do retângulo verde.'});
+  else if(d.t&&!p)mostrar(d);
+});
+function enviar(tipo,c,extra){
+  if(!op||op.closed){mostrar({k:'bad',t:'O GSL não está aberto',s:'Abra o leitor a partir do botão 📷 do GSL.'});return;}
+  const id=++seq;pend[id]={c,t:Date.now()};
+  try{op.postMessage(Object.assign({gsl:tipo,id,c},extra||{}),'*');}catch(e){}
+  setTimeout(()=>{if(pend[id]){delete pend[id];mostrar({k:'warn',t:'O GSL não respondeu',s:'Toque em «Voltar ao GSL» e veja se a leitura ficou registada.'},c);bip('warn');}},4000);
+}
+function voltar(){
+  try{const st=$('#v').srcObject;st&&st.getTracks().forEach(t=>t.stop());}catch(e){}
+  try{op&&op.focus&&op.focus();}catch(e){}
+  window.close();
+  setTimeout(()=>{if(!window.closed){history.length>1?history.back():mostrar({k:'warn',t:'Feche este separador para voltar ao GSL',s:'Use o botão dos separadores do Chrome e escolha o GSL.'});}},400);}
+$('#voltar').onclick=voltar;
+async function detetor(){
+  if('BarcodeDetector' in window){try{const sup=await BarcodeDetector.getSupportedFormats();const f=FMT.filter(x=>sup.includes(x));if(f.length)return new BarcodeDetector({formats:f});}catch(e){}}
+  const m=await import('https://cdn.jsdelivr.net/npm/barcode-detector@2.3.1/pure/+esm');return new m.BarcodeDetector({formats:FMT});
+}
+/* o mesmo código só conta outra vez depois de sair da câmara (afastar e voltar a apontar, ou passar à etiqueta seguinte) */
+function leu(raw){const c=String(raw||'').replace(/[\x00-\x1f\x7f]/g,'').trim();if(!c)return;const now=Date.now();
+  if(c===last.c&&now-last.seen<700){last.seen=now;return;}last={c,t:now,seen:now};
+  if(emPausa()){mostrar({k:'warn',t:est.pendente?'Escolha primeiro a loja da palete':est.modal?'Responda ao aviso em baixo':'Leitura em pausa',s:'A câmara volta a ler depois de escolher.'});return;}
+  const a=$('#alvo');a.classList.add('hit');setTimeout(()=>a.classList.remove('hit'),300);
+  enviar('codigo',c);}
+/* com várias etiquetas no ecrã, fica com a mais perto do centro */
+function maisAoCentro(r,v){const cx=v.videoWidth/2,cy=v.videoHeight/2;return r.slice().sort((a,b)=>{const d=x=>Math.hypot(x.boundingBox.x+x.boundingBox.width/2-cx,x.boundingBox.y+x.boundingBox.height/2-cy);return d(a)-d(b);})[0];}
+async function arrancar(){
+  if(!op){$('#msg').innerHTML='Este leitor abre-se a partir do GSL: toque no botão <b>📷</b> no ecrã de leitura do GSL.';$('#sub').textContent='Sem ligação ao GSL';return;}
+  enviar('ola','');
+  try{
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+    const v=$('#v');v.srcObject=st;await v.play().catch(()=>{});$('#msg').remove();
+    const tr=st.getVideoTracks()[0],cap=tr.getCapabilities?tr.getCapabilities():{};
+    try{tr.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{});}catch(e){}
+    if(cap.torch){const b=$('#luz');b.hidden=false;let on=false;b.onclick=()=>{on=!on;tr.applyConstraints({advanced:[{torch:on}]}).catch(()=>{});b.textContent=on?'🔦':'💡';};}
+    det=await detetor();
+    const ciclo=async()=>{try{if(v.readyState>=2&&!document.hidden){const r=await det.detect(v);if(r&&r.length)leu((r.length>1?maisAoCentro(r,v):r[0]).rawValue);}}catch(e){}setTimeout(ciclo,140);};
+    ciclo();
+  }catch(e){const t=(e&&e.name==='NotAllowedError')?'Autorize a câmara para este site nas definições do browser e volte a abrir o leitor.':'Verifique a ligação à internet e volte a abrir o leitor.';
+    const m=$('#msg');if(m)m.innerHTML='Não foi possível ligar a câmara ('+esc(e&&e.name||e)+'). '+t;else mostrar({k:'bad',t:'Não foi possível iniciar o leitor de códigos',s:t});}
+}
+arrancar();
+</script></body></html>
